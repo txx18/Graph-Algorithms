@@ -2,7 +2,7 @@
 WITH "file:///sw-nodes.csv"
 AS uri
 LOAD CSV WITH HEADERS FROM uri AS row
-MERGE (:Library {id: row.id})
+MERGE (:Library {id: row.id});
 // end::neo4j-import-nodes[]
 
 // tag::neo4j-import-relationships[]

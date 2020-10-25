@@ -11,7 +11,7 @@
               <option name="dataSourceType" value="NEO4J_BOLT" />
               <option name="configuration">
                 <map>
-                  <entry key="host" value="localhost:7687/movies" />
+                  <entry key="host" value="localhost:7687/chapter6" />
                   <entry key="password" value="11111111" />
                   <entry key="port" value="7687" />
                   <entry key="user" value="neo4j" />
