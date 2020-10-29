@@ -77,3 +77,64 @@ RETURN componentId, collect(gds.util.asNode(nodeId).id) AS libraries
   ORDER BY size(libraries) DESC;
 
 // 标签传播算法
+// 有向图
+CALL gds.labelPropagation.stream({
+  nodeProjection:         'Library',
+  relationshipProjection: 'DEPENDS_ON',
+  maxIterations:          10
+})
+YIELD nodeId, communityId
+RETURN communityId AS label,
+       collect(gds.util.asNode(nodeId).id) AS libraries
+  ORDER BY size(libraries) DESC;
+// 无向图
+CALL gds.labelPropagation.stream({
+  nodeProjection:         'Library',
+  relationshipProjection: {
+                            DEPENDS_ON: {
+                                          type:        'DEPENDS_ON',
+                                          orientation: 'UNDIRECTED'
+                                        }
+                          },
+  maxIterations:          10
+})
+YIELD nodeId, communityId
+RETURN communityId AS label,
+       collect(gds.util.asNode(nodeId).id) AS libraries
+  ORDER BY size(libraries) DESC;
+
+
+// Louvain Modularity
+CALL gds.louvain.stream({
+  nodeProjection:                 'Library',
+  relationshipProjection:         'DEPENDS_ON',
+  includeIntermediateCommunities: true
+})
+YIELD nodeId, communityId, intermediateCommunityIds
+RETURN gds.util.asNode(nodeId).id AS libraries,
+       communityId, intermediateCommunityIds;
+// 在每个节点保存最终结果
+CALL gds.louvain.write({
+  nodeProjection:                 'Library',
+  relationshipProjection:         'DEPENDS_ON',
+  includeIntermediateCommunities: true,
+  writeProperty:                  'communities'
+});
+// 在每个节点保存中间结果
+CALL gds.louvain.write({
+nodeProjection: 'Library',
+relationshipProjection: 'DEPENDS_ON',
+includeIntermediateCommunities: false,
+writeProperty: 'finalCommunity'
+});
+// 最终聚类
+match (l:Library)
+return l.finalCommunity as community, collect(l.id) as libraries
+order by size(libraries) desc;
+// 中间结果，更细粒度的聚簇
+match (l:Library)
+return l.communities[0] as community, collect(l.id) as libraries
+order by size(libraries) desc;
+match (l:Library)
+return l.communities[1] as community, collect(l.id) as libraries
+order by size(libraries) desc;
